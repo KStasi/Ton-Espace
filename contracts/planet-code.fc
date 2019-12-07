@@ -1,0 +1,47 @@
+;; Planet Contract
+
+() after_code_upgrade(slice s_addr, slice cs, int query_id) impure method_id(1666) {
+  var msg = begin_cell()
+    .store_uint(0x30, 6)
+    .store_uint(0, 64 + 32 + 1 + 1)
+    .store_uint(query_id, 64);
+  send_raw_message(msg.end_cell(), 0);
+}
+
+() upgrade_code(s_addr, cs, query_id) {
+  accept_message();
+  var code = cs~load_ref();
+  set_code(code);
+  ifnot(cs.slice_empty?()) {
+    set_c3(code.begin_parse().bless());
+    after_code_upgrade(s_addr, cs, query_id);
+    throw(0);
+  }
+  return ();
+}
+
+
+() recv_internal(cell in_msg_cell, slice in_msg) impure {
+  var cs = in_msg_cell.begin_parse();
+  var flags = cs~load_uint(4);  ;; int_msg_info$0 ihr_disabled:Bool bounce:Bool bounced:Bool
+  if (flags & 1) {
+    ;; ignore all bounced messages
+    return ();
+  }
+  var s_addr = cs~load_msg_addr();
+  if (in_msg.slice_empty?()) {
+    ;; inbound message has empty body
+    return ();
+  }
+  int op = in_msg~load_uint(32);
+  if (op == 0) {
+    ;; simple transfer with comment, return
+    return ();
+  }
+  int query_id = in_msg~load_uint(64);
+  if (op == 0x4e73744b) {
+    ;; upgrate code
+    return upgrade_code(s_addr, in_msg, query_id);
+  }
+  return ();
+}
