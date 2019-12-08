@@ -1,0 +1,40 @@
+#!/usr/bin/fift -s
+"TonUtil.fif" include
+"Asm.fif" include
+
+{ ."usage: " @' $0 type ." <workchain-id> [<filename-base>]" cr
+  ."Creates a new planet in specified workchain, with private key saved to or loaded from <filename-base>.pk" cr
+  ."('new-planet.pk' by default)" cr 1 halt
+} : usage
+$# 1- -2 and ' usage if
+
+$1 parse-workchain-id =: wc    // set workchain id from command line argument
+def? $2 { @' $2 } { "new-planet" } cond constant file-base
+"planet-code.fif" constant planet-source
+
+."Creating new planet in workchain " wc . cr
+
+// Create new simple planet
+planet-source include
+// >libref
+// code
+<b 0 32 u, 
+   file-base +".pk" load-generate-keypair
+   constant planet_pk
+   B, 
+b> // data
+null // no libraries
+// Libs{ x{ABACABADABACABA} drop x{AAAA} s>c public_lib x{1234} x{5678} |_ s>c public_lib }Libs
+<b b{0011} s, 3 roll ref, rot ref, swap dict, b>  // create StateInit
+dup ."StateInit: " <s csr. cr
+dup hashu wc swap 2dup 2constant planet_addr
+."new planet address = " 2dup .addr cr
+2dup file-base +".addr" save-address-verbose
+."Non-bounceable address (for init): " 2dup 7 .Addr cr
+."Bounceable address (for later access): " 6 .Addr cr
+
+<b b{1000100} s, planet_addr addr, b{000010} s, swap <s s, b{0} s, 0 32 u, b>
+dup ."External message for initialization is " <s csr. cr
+2 boc+>B dup Bx. cr
+file-base +"-query.boc" tuck B>file
+."(Saved planet creating query to file " type .")" cr
