@@ -9,8 +9,8 @@
 $# 1- -2 and ' usage if
 
 $1 parse-workchain-id =: wc    // set workchain id from command line argument
-def? $2 { @' $2 } { "new-spaceship" } cond constant file-base
-"spaceship-code.fif" constant spaceship-source
+def? $2 { @' $2 } { "build/new-spaceship" } cond constant file-base
+"build/spaceship-code.fif" constant spaceship-source
 
 ."Creating new spaceship in workchain " wc . cr
 
