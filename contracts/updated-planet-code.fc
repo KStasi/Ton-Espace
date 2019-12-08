@@ -1,0 +1,43 @@
+;; Planet Contract
+
+int eq_slice?(slice s1, slice s2) asm "SDEQ";
+
+() withdraw(slice s_addr, slice in_msg) impure {
+  slice ds = get_data().begin_parse();
+  var owner_addr = ds~load_msg_addr();
+  ds.end_parse();
+  throw_unless(36, eq_slice?(owner_addr, s_addr));
+  in_msg~touch();
+  while (in_msg.slice_refs()) {
+    var mode = in_msg~load_uint(8);
+    send_raw_message(in_msg~load_ref(), mode);
+  }
+  in_msg.end_parse();
+}
+
+() recv_internal(cell in_msg_cell, slice in_msg) impure {
+  var cs = in_msg_cell.begin_parse();
+  var flags = cs~load_uint(4);  ;; int_msg_info$0 ihr_disabled:Bool bounce:Bool bounced:Bool
+  if (flags & 1) {
+    ;; ignore all bounced messages
+    return ();
+  }
+  var s_addr = cs~load_msg_addr();
+  if (in_msg.slice_empty?()) {
+    ;; inbound message has empty body
+    return ();
+  }
+  int op = in_msg~load_uint(32);
+  if (op == 0) {
+    ;; simple transfer with comment, return
+    return ();
+  }
+  int query_id = in_msg~load_uint(64);
+  if (op == 0xee1ab077) {
+    ;; withdraw profit
+    return withdraw(s_addr, in_msg);
+  }
+  return ();
+}
+
+
