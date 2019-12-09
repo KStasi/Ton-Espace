@@ -9,7 +9,6 @@
 $# 1- -3 and ' usage if // show usage if number of arguments is not in range
 
 $1 parse-workchain-id =: wc    // set workchain id from command line argument
-"build/spaceship-code.fif" constant spaceship-source // ser
 def? $2 { @' $2 } { "build/spaceship-code.fif" } cond constant spaceship-source // set spaceship-source to second arg if it is set and to default otherwise
 def? $3 { @' $3 } { "build/new-spaceship" } cond constant file-base // set file-base to third arg if it is set and to default otherwise
 
