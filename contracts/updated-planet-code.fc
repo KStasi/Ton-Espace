@@ -33,9 +33,10 @@ int eq_slice?(slice s1, slice s2) asm "SDEQ";
     return ();
   }
   int query_id = in_msg~load_uint(64);
-  if (op == 0xee1ab077) {
+  if (op == 0xaaeeee) {
     ;; withdraw profit
     return withdraw(s_addr, in_msg);
   }
   return ();
 }
+

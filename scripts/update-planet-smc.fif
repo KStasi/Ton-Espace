@@ -10,8 +10,6 @@ $# dup 2 < swap 3 > or ' usage if
 
 "build/new-planet" constant file-base
 0 constant qseqno
--1 constant idx
-true constant bounce
 "build/updated-planet-code.fif" constant update-planet-source
 "build/new-spaceship" constant owner-file-base
 100 constant interval  // valid for 100 seconds
@@ -33,18 +31,11 @@ owner-file-base +".pk" load-keypair nip constant owner_pk
 ."Loading new configuration smart contract code from file " update-planet-source type cr
 "Asm.fif" include
 update-planet-source include
-<b
-spaceship_addr addr,
-b> // data
-null // no libraries
-<b b{0011} s, 3 roll ref, rot ref, swap dict, b>  // create StateInit
-dup ."StateInit: " <s csr. cr
+dup <s csr. cr
 
 // create a message
-<b x{4e73744b} s, qseqno 32 u, now interval + 32 u, swap ref, b>
-<b b{1000100} s, config_addr addr, 0 Gram, b{00} s,
-    swap <s s, b>
-dup ."resulting external message: " <s csr. cr
+<b 0xaaeeee 32 u, 1 roll ref, b>
+cr ."Message body is " dup <s csr. cr
 2 boc+>B dup Bx. cr
 savefile +".boc" tuck B>file
 ."(Saved to file " type .")" cr
