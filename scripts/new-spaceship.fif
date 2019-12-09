@@ -5,26 +5,24 @@
 { ."usage: " @' $0 type ." <workchain-id> [<filename-base>]" cr
   ."Creates a new spaceship in specified workchain, with private key saved to or loaded from <filename-base>.pk" cr
   ."('new-spaceship.pk' by default)" cr 1 halt
-} : usage
-$# 1- -2 and ' usage if
+} : usage // define new WordDef
+$# 1- -3 and ' usage if // show usage if number of arguments is not in range
 
 $1 parse-workchain-id =: wc    // set workchain id from command line argument
-def? $2 { @' $2 } { "build/new-spaceship" } cond constant file-base
-"build/spaceship-code.fif" constant spaceship-source
+"build/spaceship-code.fif" constant spaceship-source // ser
+def? $2 { @' $2 } { "build/spaceship-code.fif" } cond constant spaceship-source // set spaceship-source to second arg if it is set and to default otherwise
+def? $3 { @' $3 } { "build/new-spaceship" } cond constant file-base // set file-base to third arg if it is set and to default otherwise
 
-."Creating new spaceship in workchain " wc . cr
+."Creating new spaceship in workchain " wc . cr // print string to output
 
-// Create new simple spaceship
+// Create new spaceship
 spaceship-source include
-// >libref
-// code
 <b 0 32 u, 
    file-base +".pk" load-generate-keypair
    constant spaceship_pk
    B, 
 b> // data
 null // no libraries
-// Libs{ x{ABACABADABACABA} drop x{AAAA} s>c public_lib x{1234} x{5678} |_ s>c public_lib }Libs
 <b b{0011} s, 3 roll ref, rot ref, swap dict, b>  // create StateInit
 dup ."StateInit: " <s csr. cr
 dup hashu wc swap 2dup 2constant spaceship_addr
@@ -32,7 +30,7 @@ dup hashu wc swap 2dup 2constant spaceship_addr
 2dup file-base +".addr" save-address-verbose
 ."Non-bounceable address (for init): " 2dup 7 .Addr cr
 ."Bounceable address (for later access): " 6 .Addr cr
-<b 0 32 u, b>
+<b 0 32 u, -1 32 i, b>
 dup ."signing message: " <s csr. cr
 dup hashu spaceship_pk ed25519_sign_uint rot
 <b b{1000100} s, spaceship_addr addr, b{000010} s, swap <s s, b{0} s, swap B, swap <s s, b>
