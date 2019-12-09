@@ -1,5 +1,9 @@
 ;; Planet Contract
 
+() recv_external(slice in_msg) impure {
+  accept_message();
+}
+
 () after_code_upgrade(slice s_addr, slice cs, int query_id) impure method_id(1666) {
   var msg = begin_cell()
     .store_uint(0x30, 6)
