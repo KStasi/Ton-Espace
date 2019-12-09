@@ -39,5 +39,3 @@ int eq_slice?(slice s1, slice s2) asm "SDEQ";
   }
   return ();
 }
-
-

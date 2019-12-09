@@ -8,23 +8,22 @@
 } : usage
 $# dup 2 < swap 3 > or ' usage if
 
-"update-planet" constant file-base
+"build/new-planet" constant file-base
 0 constant qseqno
 -1 constant idx
 true constant bounce
-"updated-planet-code.fif" constant update-planet-source
-"new-spaceship" constant owner-file-base
+"build/updated-planet-code.fif" constant update-planet-source
+"build/new-spaceship" constant owner-file-base
 100 constant interval  // valid for 100 seconds
 
 3 :$1..n
 $1 =: file-base
 $2 parse-int =: qseqno
-$3 "update-planet-query" replace-if-null constant savefile
+$3 "build/updated-planet-query" replace-if-null constant savefile
 
 file-base +".addr" load-address
 2dup 2constant config_addr
 ."Configuration smart contract address = " 2dup .addr cr 6 .Addr cr
-file-base +".pk" load-keypair nip constant config_pk
 
 owner-file-base +".addr" load-address
 2dup 2constant spaceship_addr
@@ -43,10 +42,8 @@ dup ."StateInit: " <s csr. cr
 
 // create a message
 <b x{4e73744b} s, qseqno 32 u, now interval + 32 u, swap ref, b>
-dup ."signing message: " <s csr. cr
-dup hashu config_pk ed25519_sign_uint
 <b b{1000100} s, config_addr addr, 0 Gram, b{00} s,
-   swap B, swap <s s, b>
+    swap <s s, b>
 dup ."resulting external message: " <s csr. cr
 2 boc+>B dup Bx. cr
 savefile +".boc" tuck B>file
