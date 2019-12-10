@@ -23,10 +23,6 @@ file-base +".addr" load-address
 2dup 2constant config_addr
 ."Configuration smart contract address = " 2dup .addr cr 6 .Addr cr
 
-owner-file-base +".addr" load-address
-2dup 2constant spaceship_addr
-."Owner address = " 2dup .addr cr 6 .Addr cr
-owner-file-base +".pk" load-keypair nip constant owner_pk
 
 ."Loading new configuration smart contract code from file " update-planet-source type cr
 "Asm.fif" include

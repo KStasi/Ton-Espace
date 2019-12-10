@@ -1,0 +1,39 @@
+#!/usr/bin/fift -s
+"TonUtil.fif" include
+"Asm.fif" include
+
+{ ."usage: " @' $0 type ." <workchain-id> [<filename-base>]" cr
+  ."Creates a new weapon in specified workchain, with private key saved to or loaded from <filename-base>.pk" cr
+  ."('new-weapon.pk' by default)" cr 1 halt
+} : usage
+$# 1- -3 and ' usage if // show usage if number of arguments is not in range
+
+$1 parse-workchain-id =: wc    // set workchain id from command line argument
+def? $2 { @' $2 } { "build/weapon-code.fif" } cond constant weapon-source // set spaceship-source to second arg if it is set and to default otherwise
+def? $3 { @' $3 } { "build/new-weapon" } cond constant file-base // set file-base to third arg if it is set and to default otherwise
+def? $4 { @' $4 } { "build/new-spaceship" } cond constant owner-base // set file-base to third arg if it is set and to default otherwise
+
+
+owner-base +".addr" load-address
+2dup 2constant owner_addr
+."Owner address = " 2dup .addr cr 6 .Addr cr
+
+."Creating new weapon in workchain " wc . cr
+
+// Create new simple weapon
+weapon-source include
+<b 0 1 u, owner_addr addr, b> // data
+null // no libraries
+<b b{0011} s, 3 roll ref, rot ref, swap dict, b>  // create StateInit
+dup ."StateInit: " <s csr. cr
+dup hashu wc swap 2dup 2constant weapon_addr
+."new weapon address = " 2dup .addr cr
+2dup file-base +".addr" save-address-verbose
+."Non-bounceable address (for init): " 2dup 7 .Addr cr
+."Bounceable address (for later access): " 6 .Addr cr
+
+<b b{1000100} s, weapon_addr addr, b{000010} s, swap <s s, b{0} s, b>
+dup ."External message for initialization is " <s csr. cr
+2 boc+>B dup Bx. cr
+file-base +"-query.boc" tuck B>file
+."(Saved weapon creating query to file " type .")" cr
