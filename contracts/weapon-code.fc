@@ -1,0 +1,70 @@
+;; Planet Contract
+
+(int, int) load_data() {
+  slice ds = get_data().begin_parse();
+  var (owner_wc, owner_addr) = (ds~load_int(8), ds~load_uint(256));
+  ds.end_parse();
+  return (owner_wc, owner_addr);
+}
+
+(int) validate_owner(slice s_addr) impure {
+  var (sender_wc, sender_addr) = s_addr.parse_std_addr();
+  var (owner_wc, owner_addr) = load_data();
+  ifnot((owner_wc == sender_wc) & (owner_addr == sender_addr)) {
+    return (0);
+  }
+  return (1);
+}
+
+() transfer_ownership(slice s_addr, slice in_msg) impure {
+  throw_unless(77, validate_owner(s_addr));
+  var (owner_wc, owner_addr) = (in_msg~load_int(8), in_msg~load_uint(256));
+    set_data(begin_cell()
+    .store_int(owner_wc, 32)
+    .store_uint(owner_addr, 256)
+  .end_cell());
+}
+
+() propagate_ownership(int query_id, slice s_addr) impure {
+  throw_unless(77, validate_owner(s_addr));
+  var msg = begin_cell()
+    .store_uint(0x30, 6)
+    .store_uint(0, 64 + 32 + 1 + 1)
+    .store_uint(query_id, 64)
+    .store_slice(s_addr);
+  send_raw_message(msg.end_cell(), 3);
+}
+
+() recv_internal(cell in_msg_cell, slice in_msg) impure {
+  var cs = in_msg_cell.begin_parse();
+  var flags = cs~load_uint(4);  ;; int_msg_info$0 ihr_disabled:Bool bounce:Bool bounced:Bool
+  if (flags & 1) {
+    ;; ignore all bounced messages
+    return ();
+  }
+  var s_addr = cs~load_msg_addr();
+  if (in_msg.slice_empty?()) {
+    ;; inbound message has empty body
+    return ();
+  }
+  int op = in_msg~load_uint(32);
+  if (op == 0) {
+    ;; simple transfer with comment, return
+    return ();
+  }
+  int query_id = in_msg~load_uint(64);
+  if (op == 0xaaeeee) {
+    ;; withdraw profit
+    return transfer_ownership(s_addr, in_msg);
+  }
+  if (op == 0xaaeeff) {
+    ;; propagate ownership
+    return propagate_ownership(query_id, s_addr);
+  }
+  return ();
+}
+
+;; Get methods
+(int, int) seqno() method_id {
+  return load_data();
+}
