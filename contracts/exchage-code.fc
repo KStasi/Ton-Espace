@@ -1,4 +1,5 @@
 ;; Exchange Contract
+(cell, int) idict_add_ref?(cell dict, int key_len, int index, cell value) asm(value index dict key_len) "DICTIADDREF";
 
 (cell) load_data() {
   return get_data().begin_parse().preload_dict();
@@ -10,25 +11,42 @@
       offers = new_dict();
   }
   var (contr_wc, contr_addr, price) = (in_msg~load_int(8), in_msg~load_uint(256), in_msg~load_grams());
-  slice value = begin_cell()
+  cell value = begin_cell()
       .store_int(contr_wc, 8)
       .store_uint(contr_addr, 256)
       .store_slice(s_addr)
       .store_grams(price)
-      .end_cell().begin_parse();
+      .end_cell();
   ;; change to add
-  offers~idict_set(256, slice_hash(contr_wc, contr_addr), value);
-  store_data(offers);
+  var (updated_offers, s) = offers.idict_add_ref?(256, contr_addr, value);
+  throw_unless(88, s);
+  set_data(begin_cell()
+    .store_dict(updated_offers)
+    .end_cell());
 
 }
 
-;; (int, int, int, int, int) getoffer() method_id {}
-;; () buy(s_addr, in_msg) impure {}
+(int, int, int, int, int) getoffer(int contr_wc, int contr_addr) method_id {
+  cell offers = load_data();
+  if (offers.null?()) {
+      return (-1, -1, -1, -1, -1);
+  }
+  cell offer = idict_get_ref(offers, 256, contr_addr);
+  if (offer.null?()) {
+      return (-1, -1, -1, -1, -1);
+  }
+  slice offer_entry = offer.begin_parse();
+  return (offer_entry~load_int(8), offer_entry~load_uint(256), offer_entry~load_int(8), offer_entry~load_uint(256), offer_entry~load_grams()); 
+}
+
+() buy(slice s_addr, slice in_msg) impure {
+  return ();
+}
 ;; () claim_token(s_addr, in_msg) impure {}
 
 () recv_external(slice in_msg) impure {
   slice ds = get_data().begin_parse();
-  var (init, offers) = (ds~load_int(1), ds~load_dict()));
+  var (init, offers) = (ds~load_int(1), ds~load_dict());
   ifnot(init) {
     accept_message();
     set_data(begin_cell()
@@ -37,14 +55,14 @@
   }
 }
 
-(int) validate_owner(slice s_addr) impure {
-  var (sender_wc, sender_addr) = s_addr.parse_std_addr();
-  var (owner_wc, owner_addr) = load_data();
-  ifnot((owner_wc == sender_wc) & (owner_addr == sender_addr)) {
-    return (0);
-  }
-  return (1);
-}
+;;(int) validate_owner(slice s_addr) impure {
+;;  var (sender_wc, sender_addr) = s_addr.parse_std_addr();
+;;  var (owner_wc, owner_addr) = load_data();
+;;  ifnot((owner_wc == sender_wc) & (owner_addr == sender_addr)) {
+;;    return (0);
+;;  }
+;;  return (1);
+;;}
 
 () recv_internal(cell in_msg_cell, slice in_msg) impure {
   var cs = in_msg_cell.begin_parse();
@@ -70,7 +88,3 @@
   return ();
 }
 
-;; Get methods
-(int, int) seqno() method_id {
-  return load_data();
-}
