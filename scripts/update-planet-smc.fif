@@ -34,7 +34,7 @@ update-planet-source include
 dup <s csr. cr
 
 // create a message
-<b 0xaaeeee 32 u, 1 roll ref, b>
+<b 0xaaeecc 32 u, 1 roll ref, b>
 cr ."Message body is " dup <s csr. cr
 2 boc+>B dup Bx. cr
 savefile +".boc" tuck B>file

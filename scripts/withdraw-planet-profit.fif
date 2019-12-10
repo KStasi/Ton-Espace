@@ -14,15 +14,15 @@ true constant bounce  // valid for 100 seconds
 
 3 :$1..n
 $1 =: file-base
-$2 parse-int =: amount
+$2 $>GR =: amount
 $3 "build/withdraw-profit-query" replace-if-null constant savefile
 
 file-base +".addr" load-address
 2dup 2constant dest_addr
 
-<b b{01} s, bounce 1 i, b{000100} s, dest_addr addr, amount Gram, 0 9 64 32 + + 1+ u, b>
+<b b{01} s, bounce 1 i, b{000100} s, dest_addr addr, amount Gram, 0 108 u, b>
 
-<b 0xaaeeee 32 u, 0 64 u, send-mode 8 u,  1 roll ref, b>
+<b 0xaaeeee 32 u, 0 64 u, send-mode 8 u, 1 roll ref, b>
 cr ."Message body is " dup <s csr. cr
 2 boc+>B dup Bx. cr
 savefile +".boc" tuck B>file

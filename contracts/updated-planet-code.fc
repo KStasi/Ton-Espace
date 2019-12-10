@@ -4,9 +4,11 @@ int eq_slice?(slice s1, slice s2) asm "SDEQ";
 
 () withdraw(slice s_addr, slice in_msg) impure {
   slice ds = get_data().begin_parse();
-  var owner_addr = ds~load_msg_addr();
+  var (owner_wc, owner_addr) = (ds~load_int(8), ds~load_uint(256));
   ds.end_parse();
-  throw_unless(36, eq_slice?(owner_addr, s_addr));
+  var (sender_wc, sender_addr) = s_addr.parse_std_addr();
+  throw_unless(36, owner_wc = sender_wc);
+  throw_unless(37, owner_addr = sender_addr);
   in_msg~touch();
   while (in_msg.slice_refs()) {
     var mode = in_msg~load_uint(8);

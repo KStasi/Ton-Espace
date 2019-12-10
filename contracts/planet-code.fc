@@ -19,10 +19,12 @@
     ;; simple transfer with comment, return
     return ();
   }
-  if (op == 0xaaeeee) {
+  if (op == 0xaaeecc) {
     ;; upgrate code
+    var (owner_wc, owner_addr) = s_addr.parse_std_addr();
     set_data(begin_cell()
-      .store_slice(s_addr)
+      .store_int(owner_wc, 8)
+      .store_uint(owner_addr, 256)
     .end_cell());
     var code = cs~load_ref();
     set_code(code);
