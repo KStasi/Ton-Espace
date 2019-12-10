@@ -19,7 +19,7 @@ $2 "build/propagate-weapon-owner-query" replace-if-null constant savefile
 file-base +".addr" load-address
 2dup 2constant dest_addr
 
-<b 0xaaeeff 32 u, b>
+<b 0xaaeeff 32 u, 0 64 u, b>
 
 cr ."Message body is " dup <s csr. cr
 2 boc+>B dup Bx. cr

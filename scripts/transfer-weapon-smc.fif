@@ -19,7 +19,7 @@ $2 "build/transfer-weapon-query" replace-if-null constant savefile
 file-base +".addr" load-address
 2dup 2constant dest_addr
 
-<b 0xaaeeee 32 u, dest_addr addr, b>
+<b 0xaaeeee 32 u, 0 64 u, dest_addr addr, b>
 
 cr ."Message body is " dup <s csr. cr
 2 boc+>B dup Bx. cr
