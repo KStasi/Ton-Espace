@@ -1,6 +1,6 @@
 #!/bin/sh
-fift -s scripts/wallet.fif "build/main-wallet" "0f9aH3K3ymo-xBNrBIDYmumx7Uy-5ijIKcO9pjTdeiSWuCem" 48 0.3 "./build/wallet-query"
-screen -S lite-client -p 0 -X stuff "sendfile ./build/wallet-query.boc
+fift -s scripts/spaceship.fif "build/new-spaceship" "0f8nchLqQ3kvQlrz_KgCVvUuSj8y7dEUt7UqjZJ_HjBwOwqx" 3 0.3 "./build/spaceship-query"
+screen -S lite-client -p 0 -X stuff "sendfile ./build/spaceship-query.boc
 "
 sleep 5
 screen -S lite-client -p 0 -X stuff "last

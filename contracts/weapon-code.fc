@@ -14,7 +14,7 @@
   ifnot(init) {
     accept_message();
     set_data(begin_cell()
-      .store_int(owner_wc, 32)
+      .store_int(owner_wc, 8)
       .store_uint(owner_addr, 256)
       .end_cell());
   }
@@ -32,8 +32,8 @@
 () transfer_ownership(slice s_addr, slice in_msg) impure {
   throw_unless(77, validate_owner(s_addr));
   var (owner_wc, owner_addr) = (in_msg~load_int(8), in_msg~load_uint(256));
-    set_data(begin_cell()
-    .store_int(owner_wc, 32)
+  set_data(begin_cell()
+    .store_int(owner_wc, 8)
     .store_uint(owner_addr, 256)
   .end_cell());
 }
