@@ -1,4 +1,4 @@
-;; Planet Contract
+;; Weapon Contract
 
 (int, int) load_data() {
   slice ds = get_data().begin_parse();
