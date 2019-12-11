@@ -5,27 +5,6 @@
   return get_data().begin_parse().preload_dict();
 }
 
-() store_offer(s_addr, in_msg) impure {
-  cell offers = load_data();
-  if (offers.null?()) {
-      offers = new_dict();
-  }
-  var (contr_wc, contr_addr, price) = (in_msg~load_int(8), in_msg~load_uint(256), in_msg~load_grams());
-  cell value = begin_cell()
-      .store_int(contr_wc, 8)
-      .store_uint(contr_addr, 256)
-      .store_slice(s_addr)
-      .store_grams(price)
-      .end_cell();
-  ;; change to add
-  var (updated_offers, s) = offers.idict_add_ref?(256, contr_addr, value);
-  throw_unless(88, s);
-  set_data(begin_cell()
-    .store_dict(updated_offers)
-    .end_cell());
-
-}
-
 (int, int, int, int, int) getoffer(int contr_wc, int contr_addr) method_id {
   cell offers = load_data();
   if (offers.null?()) {
@@ -39,10 +18,81 @@
   return (offer_entry~load_int(8), offer_entry~load_uint(256), offer_entry~load_int(8), offer_entry~load_uint(256), offer_entry~load_grams()); 
 }
 
-() buy(slice s_addr, slice in_msg) impure {
+() store_offer(slice s_addr, int contr_wc, int contr_addr, int price) impure {
+  cell offers = load_data();
+  if (offers.null?()) {
+      offers = new_dict();
+  }
+  cell value = begin_cell()
+      .store_int(contr_wc, 8)
+      .store_uint(contr_addr, 256)
+      .store_slice(s_addr)
+      .store_grams(price)
+      .end_cell();
+  var (updated_offers, s) = offers.idict_add_ref?(256, contr_addr, value);
+  throw_unless(88, s);
+  set_data(begin_cell()
+    .store_dict(updated_offers)
+    .end_cell());
+
+}
+
+
+() buy(int sender_wc, int sender_addr, int contr_wc, int contr_addr, int msg_value) impure {
+  var (contr_wc, contr_addr, owner_wc, owner_addr, price) = getoffer(contr_wc, contr_addr);
+  throw_if(79, price == -1);
+  throw_unless(80, price <= msg_value);
+  var (updated_offers, s) = load_data().idict_delete?(256, contr_addr);
+  throw_unless(88, s);
+  set_data(begin_cell()
+    .store_dict(updated_offers)
+    .end_cell());
+  
+  var msg = begin_cell()
+    .store_uint(0xc4ff, 17)
+    .store_int(contr_wc, 8)
+    .store_uint(contr_addr, 256)
+    .store_grams(1 << 30)
+    .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+    .store_uint(0xaaeeee, 32)
+    .store_uint(0, 64)
+    .store_int(sender_wc, 8)
+    .store_uint(sender_addr, 256);
+  
+  send_raw_message(msg.end_cell(), 0);
+
+  var msg = begin_cell()
+    .store_uint(0xc4ff, 17)
+    .store_int(owner_wc, 8)
+    .store_uint(owner_wc, 256)
+    .store_grams(0)
+    .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1);
+  
+  send_raw_message(msg.end_cell(), 64);
   return ();
 }
-;; () claim_token(s_addr, in_msg) impure {}
+
+() claim_token(int sender_wc, int sender_addr, int contr_wc, int contr_addr) impure {
+  var (contr_wc, contr_addr, owner_wc, owner_addr, price) = getoffer(contr_wc, contr_addr);
+  throw_unless(91, (owner_wc == sender_wc) & (owner_addr == sender_addr));
+  var (updated_offers, s) = load_data().idict_delete?(256, contr_addr);
+  throw_unless(88, s);
+  set_data(begin_cell()
+    .store_dict(updated_offers)
+    .end_cell());
+  
+  var msg = begin_cell()
+    .store_uint(0xc4ff, 17)
+    .store_int(contr_wc, 8)
+    .store_uint(contr_addr, 256)
+    .store_grams(1 << 30)
+    .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+    .store_uint(0xaaeeee, 32)
+    .store_uint(0, 64)
+    .store_int(sender_wc, 8)
+    .store_uint(sender_addr, 256);
+ return  send_raw_message(msg.end_cell(), 0);
+}
 
 () recv_external(slice in_msg) impure {
   slice ds = get_data().begin_parse();
@@ -55,16 +105,7 @@
   }
 }
 
-;;(int) validate_owner(slice s_addr) impure {
-;;  var (sender_wc, sender_addr) = s_addr.parse_std_addr();
-;;  var (owner_wc, owner_addr) = load_data();
-;;  ifnot((owner_wc == sender_wc) & (owner_addr == sender_addr)) {
-;;    return (0);
-;;  }
-;;  return (1);
-;;}
-
-() recv_internal(cell in_msg_cell, slice in_msg) impure {
+() recv_internal(int msg_value, cell in_msg_cell, slice in_msg) impure {
   var cs = in_msg_cell.begin_parse();
   var flags = cs~load_uint(4); 
   if (flags & 1) {
@@ -79,11 +120,17 @@
     return ();
   }
   int query_id = in_msg~load_uint(64);
+  var (contr_wc, contr_addr) = (in_msg~load_int(8), in_msg~load_uint(256));
   if (op == 0xaaeeee) {
-    return store_offer(s_addr, in_msg);
+    int price = in_msg~load_grams();
+    return store_offer(s_addr, contr_wc, contr_addr, price);
   }
+  var (sender_wc, sender_addr) = (s_addr~load_int(8), s_addr~load_uint(256));
   if (op == 0xaaeeff) {
-    return buy(s_addr, in_msg);
+    return buy(sender_wc, sender_addr, contr_wc, contr_addr, msg_value);
+  }
+   if (op == 0xaaee99) {
+    return claim_token(sender_wc, sender_addr, contr_wc, contr_addr);
   }
   return ();
 }
