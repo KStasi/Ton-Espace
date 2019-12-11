@@ -86,13 +86,13 @@
     .store_uint(0xc4ff, 17)
     .store_int(contr_wc, 8)
     .store_uint(contr_addr, 256)
-    .store_grams(1 << 30)
+    .store_grams(1 << 27)
     .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
     .store_uint(0xaaeeee, 32)
     .store_uint(0, 64)
     .store_int(sender_wc, 8)
     .store_uint(sender_addr, 256);
- return  send_raw_message(msg.end_cell(), 0);
+ return  send_raw_message(msg.end_cell(), 64);
 }
 
 () recv_external(slice in_msg) impure {

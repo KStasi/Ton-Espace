@@ -1,0 +1,27 @@
+#!/usr/bin/fift -s
+"TonUtil.fif" include
+
+{ ."usage: " $0 type ." <filename-base> <seqno> [<savefile>]" cr
+  ."Creates a request to simple configuration smart contract requesting to change configuration smart contract code to the one currently stored in update-planet-code.fif, "
+  ."with private key loaded from file <filename-base>.pk, "
+  ."and saves it into <savefile>.boc ('update-planet-query.boc' by default)" cr 1 halt
+} : usage
+$# dup 1 < swap 2 > or ' usage if
+
+0 constant seqno
+3 constant send-mode
+true constant bounce  // valid for 100 seconds
+
+3 :$1..n
+$1 =: file-base
+$2 "build/buy-exchange-query" replace-if-null constant savefile
+
+file-base +".addr" load-address
+2dup 2constant dest_addr
+
+<b 0xaaeeff 32 u, 0 64 u, dest_addr addr, b>
+
+cr ."Message body is " dup <s csr. cr
+2 boc+>B dup Bx. cr
+savefile +".boc" tuck B>file
+."(Saved to file " type .")" cr
