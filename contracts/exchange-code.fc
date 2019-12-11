@@ -18,7 +18,7 @@
   return (offer_entry~load_int(8), offer_entry~load_uint(256), offer_entry~load_int(8), offer_entry~load_uint(256), offer_entry~load_grams()); 
 }
 
-() store_offer(slice s_addr, int contr_wc, int contr_addr, int price) impure {
+() store_offer(int sender_wc, int sender_addr, int contr_wc, int contr_addr, int price) impure {
   cell offers = load_data();
   if (offers.null?()) {
       offers = new_dict();
@@ -26,7 +26,8 @@
   cell value = begin_cell()
       .store_int(contr_wc, 8)
       .store_uint(contr_addr, 256)
-      .store_slice(s_addr)
+      .store_int(sender_wc, 8)
+      .store_uint(sender_addr, 256)
       .store_grams(price)
       .end_cell();
   var (updated_offers, s) = offers.idict_add_ref?(256, contr_addr, value);
@@ -121,11 +122,11 @@
   }
   int query_id = in_msg~load_uint(64);
   var (contr_wc, contr_addr) = (in_msg~load_int(8), in_msg~load_uint(256));
+  var (sender_wc, sender_addr) = (s_addr~load_int(8), s_addr~load_uint(256));
   if (op == 0xaaeeee) {
     int price = in_msg~load_grams();
-    return store_offer(s_addr, contr_wc, contr_addr, price);
+    return store_offer(sender_wc, sender_addr, contr_wc, contr_addr, price);
   }
-  var (sender_wc, sender_addr) = (s_addr~load_int(8), s_addr~load_uint(256));
   if (op == 0xaaeeff) {
     return buy(sender_wc, sender_addr, contr_wc, contr_addr, msg_value);
   }
