@@ -39,8 +39,8 @@
 }
 
 
-() buy(int sender_wc, int sender_addr, int contr_wc, int contr_addr, int msg_value) impure {
-  var (contr_wc, contr_addr, owner_wc, owner_addr, price) = getoffer(contr_wc, contr_addr);
+() buy(int sender_wc, int sender_addr, int cont_wc, int cont_addr, int msg_value) impure {
+  var (contr_wc, contr_addr, owner_wc, owner_addr, price) = getoffer(cont_wc, cont_addr);
   throw_if(79, price == -1);
   throw_unless(80, price <= msg_value);
   var (updated_offers, s) = load_data().idict_delete?(256, contr_addr);
@@ -53,7 +53,7 @@
     .store_uint(0xc4ff, 17)
     .store_int(contr_wc, 8)
     .store_uint(contr_addr, 256)
-    .store_grams(1 << 30)
+    .store_grams(1 << 27)
     .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
     .store_uint(0xaaeeee, 32)
     .store_uint(0, 64)
@@ -69,8 +69,7 @@
     .store_grams(0)
     .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1);
   
-  send_raw_message(msg.end_cell(), 64);
-  return ();
+  return send_raw_message(msg.end_cell(), 64);
 }
 
 () claim_token(int sender_wc, int sender_addr, int contr_wc, int contr_addr) impure {
