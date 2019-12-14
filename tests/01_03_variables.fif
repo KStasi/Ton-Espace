@@ -1,4 +1,7 @@
 #!/usr/bin/env fift -s
+{ swap dup 0= { drop ."success " cr } { "test exits with code: " swap  (.)  $+ abort } cond } : test_code
+{ { ."success " cr } { " contract state error: " abort } cond } : test_state
+
 "TonUtil.fif" include
 "Asm.fif" include
 "build/spaceship-code.fif" include <s
@@ -8,19 +11,26 @@ constant code
 true constant bounce
 0 constant amount
 "build/new-spaceship" constant file-base
--1 constant recv_external
-0 constant recv_internal
 
 file-base +".addr" load-address 2constant dest_addr
-file-base +".pk" load-generate-keypair nip constant spaceship_pk
+
+// create internal message
+<b b> 
+<s constant int_msg_body  
+<b b{0100} s, bounce 1 i, b{000100} s, dest_addr addr, amount Gram, 0 9 64 32 + + 1+ u, int_msg_body s, b>  constant int_message 
+
 
 // create external message
-<b b{0100} s, bounce 1 i, b{000100} s, dest_addr addr, amount Gram, 0 9 64 32 + + 1+ u, b>  constant int_message 
+<b 0 32 u, 
+-1 32 i, 
+b> 
 
+dup hashu file-base +".pk" load-generate-keypair nip ed25519_sign_uint
+<b swap B, 
+swap <s s, b> 
+<s constant ext_msg_body  
 
-<b 0 32 u, -1 32 i, dup constant body b> 
-dup hashu spaceship_pk ed25519_sign_uint dup constant signature
-<b b{1000100} s, dest_addr addr, 0 Gram, b{00} s, swap B, swap  <s s, b> constant ext_message
+<b b{1000100} s, dest_addr addr, 0 Gram, b{00} s, ext_msg_body s, b> constant ext_message
 
 0 tuple 0x076ef1ea , // magic
 0 , 0 , // actions msg_sents
@@ -31,5 +41,10 @@ dup hashu spaceship_pk ed25519_sign_uint dup constant signature
 1 tuple // wrap to another tuple
 constant c7
 
-int_message recv_internal code storage c7 runvmctx
-body signature B, b> <s  recv_external code storage c7 runvmctx
+int_msg_body recv_internal code storage c7 runvmctx
+test_code
+boc>B storage boc>B B= test_state
+ext_msg_body recv_external code storage c7 runvmctx
+test_code
+boc>B <b -1 32 i, b> boc>B B= test_state 
+
