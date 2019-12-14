@@ -43,7 +43,8 @@
   var (contr_wc, contr_addr, owner_wc, owner_addr, price) = getoffer(cont_wc, cont_addr);
   throw_if(79, price == -1);
   throw_unless(80, price <= msg_value);
-  var (updated_offers, s) = load_data().idict_delete?(256, contr_addr);
+  cell offers = load_data();
+  var (updated_offers, s) = offers.idict_delete?(256, contr_addr);
   throw_unless(88, s);
   set_data(begin_cell()
     .store_dict(updated_offers)
