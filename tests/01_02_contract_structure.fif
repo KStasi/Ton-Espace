@@ -1,0 +1,32 @@
+#!/usr/bin/env fift -s
+"TonUtil.fif" include
+"Asm.fif" include
+"build/spaceship-code.fif" include <s
+constant code
+
+<b b> constant storage
+true constant bounce
+0 constant amount
+"build/new-spaceship" constant file-base
+-1 constant recv_external
+0 constant recv_internal
+
+file-base +".addr" load-address
+2dup 2constant dest_addr
+
+// create external message
+<b b{0100} s, bounce 1 i, b{000100} s, dest_addr addr, amount Gram, 0 9 64 32 + + 1+ u, b>  constant int_message 
+
+<b b{1000100} s, dest_addr addr, amount Gram, b{00} s, b> constant ext_message 
+
+0 tuple 0x076ef1ea , // magic
+0 , 0 , // actions msg_sents
+1570470873 , // unix_time
+1 , 1 , 0 , // block_lt, trans_lt, rand_seed
+0 tuple 9223372036854775807 , dictnew , , // remaining balance
+0 , dictnew , // contract_address, global_config
+1 tuple // wrap to another tuple
+constant c7
+
+int_message recv_internal code storage c7 runvmctx
+ext_message recv_external code storage c7 runvmctx
