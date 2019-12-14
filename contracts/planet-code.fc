@@ -6,7 +6,7 @@
 
 () recv_internal(cell in_msg_cell, slice in_msg) impure {
   var cs = in_msg_cell.begin_parse();
-  var flags = cs~load_uint(4);  ;; int_msg_info$0 ihr_disabled:Bool bounce:Bool bounced:Bool
+  var flags = cs~load_uint(4);
   if (flags & 1) {
     return ();
   }
@@ -16,11 +16,9 @@
   }
   int op = in_msg~load_uint(32);
   if (op == 0) {
-    ;; simple transfer with comment, return
     return ();
   }
   if (op == 0xaaeecc) {
-    ;; upgrate code
     var (owner_wc, owner_addr) = s_addr.parse_std_addr();
     set_data(begin_cell()
       .store_int(owner_wc, 8)
