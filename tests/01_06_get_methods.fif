@@ -1,7 +1,7 @@
 #!/usr/bin/env fift -s
 "TonUtil.fif" include
 "Asm.fif" include
-.s
+
 { { ."success " cr } { "test failed" abort } cond } : test_ret_value
 { swap 0= test_ret_value } : test_code
 { { ."success " cr } { " contract state error: " abort } cond } : test_state
