@@ -14,7 +14,7 @@ file-base +".addr" load-address 2constant dest_addr
 "build/spaceship-code.fif" include <s
 constant code
 
-<b 0 32 u, file-base +".pk" load-generate-keypair nip B, b> constant storage
+<b 0 32 u, file-base +".pk" load-generate-keypair constant private_key dup constant public_key B, b> constant storage
 
 
 // create internal message
@@ -28,7 +28,7 @@ constant code
 -1 32 i, 
 b> 
 
-dup hashu file-base +".pk" load-keypair nip ed25519_sign_uint
+dup hashu private_key ed25519_sign_uint
 <b swap B, 
 swap <s s, b> 
 <s constant ext_msg_body  
@@ -49,5 +49,5 @@ test_code
 boc>B storage boc>B B= test_state
 ext_msg_body recv_external code storage c7 runvmctx
 test_code
-boc>B <b -1 32 i, b> boc>B B= test_state 
+boc>B <b 1 32 u, public_key B, b> boc>B B= test_state 
 
