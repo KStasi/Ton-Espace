@@ -1,0 +1,55 @@
+#!/usr/bin/env fift -s
+"TonUtil.fif" include
+"Asm.fif" include
+.s
+{ swap dup 0= { drop ."success " cr } { "test exits with code: " swap  (.)  $+ abort } cond } : test_code
+{ { ."success " cr } { " contract state error: " abort } cond } : test_state
+
+true constant bounce
+0 constant amount
+"build/new-spaceship" constant file-base
+file-base +".addr" load-address 2constant dest_addr
+
+
+"build/spaceship-code.fif" include <s
+constant code
+
+<b 0 32 u, file-base +".pk" load-generate-keypair constant private_key dup constant public_key B, b> constant storage
+
+
+// create internal message
+<b b> 
+<s constant int_msg_body  
+<b b{0100} s, bounce 1 i, b{000100} s, dest_addr addr, amount Gram, 0 9 64 32 + + 1+ u, int_msg_body s, b>  constant int_message 
+
+
+// create external message
+<b 0 32 u, 
+-1 32 i, 
+3 8 u, 
+int_message ref,
+b> 
+
+dup hashu private_key ed25519_sign_uint
+<b swap B, 
+swap <s s, b> 
+<s constant ext_msg_body  
+
+<b b{1000100} s, dest_addr addr, 0 Gram, b{00} s, ext_msg_body s, b> constant ext_message
+
+0 tuple 0x076ef1ea , // magic
+0 , 0 , // actions msg_sents
+1570470873 , // unix_time
+1 , 1 , 0 , // block_lt, trans_lt, rand_seed
+0 tuple 9223372036854775807 , dictnew , , // remaining balance
+0 , dictnew , // contract_address, global_config
+1 tuple // wrap to another tuple
+constant c7
+
+int_msg_body recv_internal code storage c7 runvmctx
+test_code
+boc>B storage boc>B B= test_state
+ext_msg_body recv_external code storage c7 runvmctx
+test_code
+boc>B <b 1 32 u, public_key B, b> boc>B B= test_state 
+
